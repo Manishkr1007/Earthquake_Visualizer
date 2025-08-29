@@ -14,21 +14,32 @@ const EarthquakeLineGraph: React.FC<EarthquakeLineGraphProps> = ({ earthquakes }
   const sorted = [...earthquakes].sort((a, b) => a.time - b.time).slice(-20);
   const maxMag = Math.max(...sorted.map(e => e.mag));
   const minMag = Math.min(...sorted.map(e => e.mag));
-  const width = 600;
-  const height = 240;
+  // Responsive width/height for mobile/desktop
+  let width = 600;
+  let height = 440;
+  if (typeof window !== 'undefined') {
+    if (window.innerWidth < 640) {
+      width = 320;
+      height = 180;
+    } 
+  }
   const padding = 30;
   const points = sorted.map((e, i) => {
     const x = padding + (i * (width - 2 * padding)) / (sorted.length - 1);
     const y = height - padding - ((e.mag - minMag) / (maxMag - minMag || 1)) * (height - 2 * padding);
-    return { x, y, mag: e.mag, time: e.time, place: e.place };
+    // Color by magnitude
+    let color = '#22c55e'; // green
+    if (e.mag >= 6) color = '#ef4444'; // red
+    else if (e.mag >= 4) color = '#facc15'; // yellow
+    return { x, y, mag: e.mag, time: e.time, place: e.place, color };
   });
-  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  // pathD is unused
   return (
-    <svg width={width} height={height} className="w-full h-60">
+    <svg width={width} height={height} className=" " style={{ display: 'block' }}>
       <polyline fill="none" stroke="#7fd6e7" strokeWidth={3} points={points.map(p => `${p.x},${p.y}`).join(' ')} />
-      {/* Dots */}
+      {/* Dots with color by magnitude */}
       {points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={4} fill="#7fd6e7">
+        <circle key={i} cx={p.x} cy={p.y} r={5} fill={p.color} stroke="#232526" strokeWidth={1.5}>
           <title>{`Mag ${p.mag} @ ${new Date(p.time).toLocaleTimeString()}\n${p.place}`}</title>
         </circle>
       ))}

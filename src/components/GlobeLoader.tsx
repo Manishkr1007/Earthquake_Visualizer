@@ -2,7 +2,7 @@
 
 export default function GlobeLoader() {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-[#1e2028] rounded-3xl ">
       <svg
         className="animate-spin-slow"
         width="180"

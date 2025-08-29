@@ -8,31 +8,44 @@ import { fetchEarthquakes, type Earthquake } from '../api/earthquake';
 
 
 
+// Main dashboard component for earthquake visualization
 export default function EarthquakeDashboard() {
   const [earthquakes, setEarthquakes] = useState<Earthquake[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 'loading' state removed, handled by showLoader and error
   const [showLoader, setShowLoader] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
 
-  // Loader for 2 seconds on mount
+  // Loader for 2 seconds on mount, with error handling
   useEffect(() => {
     setShowLoader(true);
-    fetchEarthquakes().then(data => {
-      setEarthquakes(data);
-      setLoading(false);
-      setTimeout(() => setShowLoader(false), 2000);
-    });
+    setError(null);
+    fetchEarthquakes()
+      .then(data => {
+  setEarthquakes(data);
+        setTimeout(() => setShowLoader(false), 2000);
+      })
+      .catch(() => {
+        setError("Network error: Unable to fetch earthquake data.");
+  setEarthquakes([]);
+        setTimeout(() => setShowLoader(false), 2000);
+      });
   }, []);
 
-  // Refresh handler
+  // Refresh handler with error handling
   const handleRefresh = () => {
     setShowLoader(true);
-    setLoading(true);
-    fetchEarthquakes().then(data => {
-      setEarthquakes(data);
-      setLoading(false);
-      setTimeout(() => setShowLoader(false), 2000);
-    });
+    setError(null);
+    fetchEarthquakes()
+      .then(data => {
+  setEarthquakes(data);
+        setTimeout(() => setShowLoader(false), 2000);
+      })
+      .catch(() => {
+        setError("Network error: Unable to fetch earthquake data.");
+  setEarthquakes([]);
+        setTimeout(() => setShowLoader(false), 2000);
+      });
   };
 
   const activeCount = earthquakes.length;
@@ -47,56 +60,69 @@ export default function EarthquakeDashboard() {
     })() : '-';
 
   return (
-    <div className="relative max-w-full mx-auto bg-[#1e2028]/95 rounded-3xl shadow-2xl p-10 flex flex-col gap-10 min-h-[80vh]">
+    <div className="relative max-w-full mx-auto bg-[#1e2028]/95 rounded-3xl shadow-2xl p-2 sm:p-6 md:p-10 flex flex-col gap-6 min-h-[80vh]">
       {/* Loader Overlay */}
-      {showLoader && (
-        <div className="absolute h-screen  inset-0 z-50 flex items-center justify-center bg-[#1e2028]/95 rounded-3xl">
+        {showLoader && ( 
+          <div className="absolute top-0 left-0 w-screen h-screen z-[9999] flex items-center justify-center bg-transparent">
           <GlobeLoader />
         </div>
-      )}
+        )} 
       {/* Refresh Button */}
       <button
         onClick={handleRefresh}
-        className="absolute top-6 right-8 z-60 bg-[#232526] hover:bg-[#2e3136] text-[#7fd6e7] font-bold py-2 px-5 rounded-full shadow transition-all border border-[#7fd6e7] text-lg flex items-center gap-2"
-        style={{ minWidth: 120 }}
+        className="absolute top-3 right-3 sm:top-6 sm:right-8 z-60 bg-[#232526] hover:bg-[#2e3136] text-[#7fd6e7] font-bold py-2 px-4 sm:px-5 rounded-full shadow transition-all border border-[#7fd6e7] text-base sm:text-lg flex items-center gap-2"
+        style={{ minWidth: 90 }}
         aria-label="Refresh Earthquake Data"
       >
-        <RotateCcw className="h-6 w-6 mr-1" />
+        <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6 mr-1" />
         Refresh
       </button>
-      <header className="text-center mb-4">
-        <h1 className="text-[2.8rem] mb-1 text-[#7fd6e7] tracking-wide">🌍 Earthquake Visualizer</h1>
-        <p className="text-[#b0b8c1] text-[1.2rem]">Real-time earthquake stats and insights</p>
+      <header className="text-center mb-2 sm:mb-4">
+        <h1 className="text-[2rem] sm:text-[2.8rem] mb-1 text-[#7fd6e7] tracking-wide">🌍 Earthquake Visualizer</h1>
+        <p className="text-[#b0b8c1] text-base sm:text-[1.2rem]">Real-time earthquake stats and insights</p>
       </header>
-      {/* Hide dashboard content when loader is shown */}
-      {!showLoader && (
+      {/* Error or No Results Message */}
+      {!showLoader && error && (
+        <div className="text-center text-red-400 font-semibold text-lg py-8">{error}</div>
+      )}
+      {!showLoader && !error && earthquakes.length === 0 && (
+        <div className="text-center text-yellow-300 font-semibold text-lg py-8">No earthquake results found.</div>
+      )}
+      {/* Hide dashboard content when loader or error is shown */}
+      {!showLoader && !error && earthquakes.length > 0 && (
         <>
+          {/* Stats Section */}
           <section className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6">
-        <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-6 text-center transition-transform">
-          <h2 className="text-[#7fd6e7] text-[1.1rem] mb-2 font-medium">Active Earthquakes</h2>
-          <span className="text-[2.3rem] font-bold text-white tracking-wide">{loading ? '-' : activeCount}</span>
-        </div>
-        <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-6 text-center transition-transform">
-          <h2 className="text-[#7fd6e7] text-[1.1rem] mb-2 font-medium">Strongest Magnitude</h2>
-          <span className="text-[2.3rem] font-bold text-white tracking-wide">{loading ? '-' : strongest}</span>
-        </div>
-        <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-6 text-center transition-transform">
-          <h2 className="text-[#7fd6e7] text-[1.1rem] mb-2 font-medium">Most Recent</h2>
-          <span className="text-[2.3rem] font-bold text-white tracking-wide">{loading ? '-' : mostRecentAgo}</span>
-        </div>
-      </section>
+            <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-4 sm:p-6 text-center transition-transform">
+              <h2 className="text-[#7fd6e7] text-base sm:text-[1.1rem] mb-2 font-medium">Active Earthquakes</h2>
+              <span className="text-2xl sm:text-[2.3rem] font-bold text-white tracking-wide">{activeCount}</span>
+            </div>
+            <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-4 sm:p-6 text-center transition-transform">
+              <h2 className="text-[#7fd6e7] text-base sm:text-[1.1rem] mb-2 font-medium">Strongest Magnitude</h2>
+              <span className="text-2xl sm:text-[2.3rem] font-bold text-white tracking-wide">{strongest}</span>
+            </div>
+            <div className="flex-1 bg-gradient-to-br from-[#232526] to-[#414345] rounded-2xl shadow-md p-4 sm:p-6 text-center transition-transform">
+              <h2 className="text-[#7fd6e7] text-base sm:text-[1.1rem] mb-2 font-medium">Most Recent</h2>
+              <span className="text-2xl sm:text-[2.3rem] font-bold text-white tracking-wide">{mostRecentAgo}</span>
+            </div>
+          </section>
+          {/* Map & Graph Section */}
           <section className="flex flex-col md:flex-row gap-6 md:gap-8 flex-wrap">
-        <div className="flex-1 min-w-[250px] md:min-w-[350px] bg-[#232526] rounded-2xl p-4 sm:p-6 pb-8 min-h-[340px] md:min-h-[440px] shadow-md mb-4">
-          <h3 className="text-[#7fd6e7] mb-5 text-[1.15rem]">Earthquake Map</h3>
-          <EarthquakeMap />
-        </div>
-        <div className="flex-1 min-w-[250px] md:min-w-[350px] bg-[#232526] rounded-2xl p-4 sm:p-6 pb-8 min-h-[180px] md:min-h-[220px] shadow-md mb-4">
-          <h3 className="text-[#7fd6e7] mb-5 text-[1.15rem]">Latest Magnitudes (Line Graph)</h3>
-          <div className="rounded-xl h-40 md:h-60 flex items-center justify-center">
-            <EarthquakeLineGraph earthquakes={earthquakes} />
-          </div>
-        </div>
-      </section>
+            <div className="flex-1 w-full min-w-0 max-w-full bg-[#232526] rounded-2xl p-2 sm:p-4 md:p-6 pb-4 sm:pb-8 min-h-[180px] sm:min-h-[260px] md:min-h-[440px] shadow-md mb-4 overflow-x-auto sm:overflow-x-visible">
+              <h3 className="text-[#7fd6e7] mb-2 sm:mb-5 text-base sm:text-[1.15rem]">Earthquake Map</h3>
+              <div className="w-full h-[180px] sm:h-[260px] md:h-[440px]">
+                <EarthquakeMap />
+              </div>
+            </div>
+            <div className="flex-1 w-full min-w-0 max-w-full bg-[#232526] rounded-2xl p-2 sm:p-4 md:p-6 pb-4 sm:pb-8 min-h-[100px] sm:min-h-[120px] md:min-h-[220px] shadow-md mb-4 flex flex-col overflow-x-auto">
+              <h3 className="text-[#7fd6e7] mb-2 sm:mb-3 md:mb-5 text-sm sm:text-base md:text-[1.15rem]">Latest Magnitudes (Line Graph)</h3>
+              <div className="rounded-xl flex-1 flex flex-col justify-end min-h-[80px] sm:min-h-[100px] md:min-h-[180px] w-full">
+                <div className="w-full h-full flex items-end">
+                  <EarthquakeLineGraph earthquakes={earthquakes} />
+                </div>
+              </div>
+            </div>
+          </section>
         </>
       )}
       {/* Custom slow spin animation for globe */}

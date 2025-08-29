@@ -1,4 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
+
+import { Info } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import L from "leaflet";
@@ -26,6 +28,7 @@ const getColorByMagnitude = (mag: number) => {
 
 export default function EarthquakeMap() {
   const [earthquakes, setEarthquakes] = useState<Earthquake[]>([]);
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
     fetchEarthquakes().then(setEarthquakes);
@@ -42,58 +45,83 @@ export default function EarthquakeMap() {
         boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
       }}
     >
-      {/* Legend */}
-      <div
+      {/* Info Button to toggle legend */}
+      <button
+        aria-label="Show legend"
+        onClick={() => setShowLegend((v) => !v)}
         style={{
           position: "absolute",
-          top: 10,
-          left: 10,
-          background: "white",
-          padding: "8px 12px",
-          borderRadius: "8px",
+          top: 14,
+          left: 14,
+          zIndex: 1100,
+          background: "#fff",
+          borderRadius: "50%",
+          width: 36,
+          height: 36,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-          fontSize: "14px",
-          zIndex: 1000,
+          border: "1px solid #b0b8c1",
+          cursor: "pointer",
         }}
       >
-        <strong>Legend:</strong>
-        <div style={{ display: "flex", alignItems: "center", marginTop: "4px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              width: "14px",
-              height: "14px",
-              background: "green",
-              marginRight: "6px",
-            }}
-          ></span>
-          Low ( {"<"} 4 )
+        <Info size={20} color="#7fd6e7" />
+      </button>
+      {/* Legend, toggled by info button */}
+      {showLegend && (
+        <div
+          style={{
+            position: "absolute",
+            top: 60,
+            left: 10,
+            background: "white",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+            fontSize: "14px",
+            zIndex: 1000,
+          }}
+        >
+          <strong>Legend:</strong>
+          <div style={{ display: "flex", alignItems: "center", marginTop: "4px" }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: "14px",
+                height: "14px",
+                background: "green",
+                marginRight: "6px",
+              }}
+            ></span>
+            Low ( {"<"} 4 )
+          </div>
+          <div style={{ display: "flex", alignItems: "center", marginTop: "2px" }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: "14px",
+                height: "14px",
+                background: "yellow",
+                marginRight: "6px",
+              }}
+            ></span>
+            Moderate ( 4 – 5.9 )
+          </div>
+          <div style={{ display: "flex", alignItems: "center", marginTop: "2px" }}>
+            <span
+              style={{
+                display: "inline-block",
+                width: "14px",
+                height: "14px",
+                background: "red",
+                marginRight: "6px",
+              }}
+            ></span>
+            High ( ≥ 6 )
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", marginTop: "2px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              width: "14px",
-              height: "14px",
-              background: "yellow",
-              marginRight: "6px",
-            }}
-          ></span>
-          Moderate ( 4 – 5.9 )
-        </div>
-        <div style={{ display: "flex", alignItems: "center", marginTop: "2px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              width: "14px",
-              height: "14px",
-              background: "red",
-              marginRight: "6px",
-            }}
-          ></span>
-          High ( ≥ 6 )
-        </div>
-      </div>
+      )}
 
       {/* Map */}
       <MapContainer
